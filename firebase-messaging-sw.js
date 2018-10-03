@@ -24,10 +24,10 @@ messaging.setBackgroundMessageHandler(function (payload) {
     //};
     //self.registration.showNotification(payload.data.title, _options);
 
-    const _title = "test title";// payload.data.title;
+    const _title = payload.data.title;
     const _options = {
-        body: "Background Message body" //payload.data.body,
-        ,icon: 'https://www.ruten.com.tw/images/logo_s.gif',
+        body: payload.data.body
+        ,icon: '/icon/ms-icon-310x310.png',
         click_action: 'https://yahoo.com.tw'
     };
 
