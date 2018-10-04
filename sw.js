@@ -24,19 +24,38 @@
 self.addEventListener("push", function(event) {
   console.log("[Service Worker] Push Received.");
   console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);
+  var _json = JSON.parse(event.data.text());
+  console.log(_json);
 
-  const title = "Push Codelab";
-  const options = {
-    body: "Yay it works.",
+  var title = _json.title; //"Push Codelab";
+  var options = {
+    body: _json.body,
     icon: "images/icon.png",
     badge: "images/badge.png"
   };
 
   //event.waitUntil(self.registration.showNotification(title, options));
 
-  const notificationPromise = self.registration.showNotification(
-    title,
-    options
-  );
+  var notificationPromise = self.registration.showNotification(title, options);
   event.waitUntil(notificationPromise);
+});
+
+self.addEventListener("notificationclick", function(event) {
+  console.log("[Service Worker] Notification click Received.");
+  const notification = event.notification;
+  const action = event.action;
+  const link = "https://developers.google.com/web/"; // notification.data.link;
+  if (action !== "close") {
+    if (link) {
+      clients.openWindow(link);
+    }
+  }
+  notification.close();
+  console.log("notificationclick action is", action);
+
+  /*
+  event.notification.close();
+
+  event.waitUntil(clients.openWindow("https://developers.google.com/web/"));
+  */
 });
