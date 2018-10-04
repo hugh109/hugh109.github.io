@@ -1,214 +1,46 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <title>CSharp-Web-Notification-Sample</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>Push Codelab</title>
 
-    <!-- app icon -->
-    <link rel="apple-touch-icon" sizes="57x57" href="icon/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="icon/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="icon/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="icon/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="icon/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="icon/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="icon/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="icon/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="icon/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="icon/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="icon/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon-16x16.png">
-    <link rel="manifest" href="icon/manifest.json">
-    <meta name="msapplication-TileColor" content="#2F2C25">
-    <meta name="msapplication-TileImage" content="icon/ms-icon-144x144.png">
-    <meta name="theme-color" content="#2F2C25">
-
-
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/4.8.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/4.8.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/4.8.1/firebase-messaging.js"></script>
-
-
-
-
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.indigo-pink.min.css">
+  <script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+  <link rel="stylesheet" href="styles/index.css">
 </head>
+
 <body>
-    <!-- Get Permsiion -->
-    <button type="button" id="btnGetNotification">取得顯示通知權限</button>
 
-    <script>
-        $('#btnGetNotification').click(function () {
+  <header>
+    <h1>Push Codelab</h1>
+  </header>
 
-            if (Notification && Notification.permission === 'default') {
-                Notification.requestPermission(function (permission) {
-                    if (!('permission' in Notification)) {
-                        Notification.permission = permission;
-                    }
-                });
-            }
-            else if (Notification.permission === 'granted') {
-                alert('已經有取得權限了!');
-            }
-            else {
-                alert('請檢查是否你的瀏覽器支援');
-            }
-        });
-    </script>
+  <main>
+    <p>Welcome to the push messaging codelab. The button below needs to be
+    fixed to support subscribing to push.</p>
+    <p>
+      <button disabled class="js-push-btn mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+        Enable Push Messaging
+      </button>
+    </p>
+    <section class="subscription-details js-subscription-details is-invisible">
+      <p>Once you've subscribed your user, you'd send their subscription to your
+      server to store in a database so that when you want to send a message
+      you can lookup the subscription and send a message to it.</p>
+      <p>To simplify things for this code lab copy the following details
+      into the <a href="https://web-push-codelab.glitch.me//">Push Companion
+      Site</a> and it'll send a push message for you, using the application
+      server keys on the site - so make sure they match.</p>
+      <pre><code class="js-subscription-json"></code></pre>
+    </section>
+  </main>
 
+  <script src="scripts/main.js"></script>
 
-    <!-- Display Notification -->
-    <button type="button" id="btnShowNotification">跑一個顯示通知範例</button>
-    <script>
-
-        var notification = null;
-        function ShowNotification(title, body) {
-            notification = new Notification(title, {
-                icon: '/icon/ms-icon-310x310.png',
-                tag: 'notification',
-                body: body,
-                onclick: function () {
-                    parent.focus();
-                    window.focus(); //just in case, older browsers
-                    this.close();
-                }
-            })
-        }
-
-        $('#btnShowNotification').click(function () {
-            if (Notification && Notification.permission === 'default') {
-                Notification.requestPermission(function (permission) {
-                    if (!('permission' in Notification)) {
-                        Notification.permission = permission;
-                    }
-                });
-            }
-            else if (Notification.permission === 'granted') {
-                ShowNotification("測試標題", "測試內文");
-                //三秒後自動關閉
-                setTimeout(notification.close.bind(notification), 3000);
-            }
-            else {
-                alert('請檢查是否你的瀏覽器支援');
-            }
-        });
-
-    </script>
-
-
-    <!-- Start FireBase -->
-    <button type="button" id="btnStarGetTokenAndReceivePush">取得 Push Token etc..</button>
-    <br />
-    <hr />
-    <span id="log" style="color: red"></span>
-    <script>
-
-        var messaging = null;
-
-        $(document).ready(function () {
-
-
-            //var config = {
-            //    apiKey: "AIzaSyCjRf8Ulp2PKtZO-FWh6OAB8_ig2GJMZAU",
-            //    authDomain: "localhost:61441",
-            //    databaseURL: "https://donma-test-web-push.firebaseio.com",
-            //    projectId: "donma-test-web-push",
-            //    storageBucket: "donma-test-web-push.appspot.com",
-            //    messagingSenderId: "548756765078"
-            //};
-
-            var config = {
-                apiKey: "AIzaSyA1gZ4W94TSclXzlDOgSwB95N8C4oRCQkA",
-                authDomain: "hugh109.github.io",// "proxnotification.firebaseapp.com",
-                databaseURL: "https://proxnotification.firebaseio.com",
-                projectId: "proxnotification",
-                storageBucket: "proxnotification.appspot.com",
-                messagingSenderId: "879694680989"
-            };
-
-            firebase.initializeApp(config);
-
-
-            messaging = firebase.messaging();
-
-            //收到訊息後的處理
-            messaging.onMessage(function (payload) {
-                //Log
-                $('#log').prepend("Message received :" + JSON.stringify(payload) + "<br><br>")
-
-                //如果可以顯示通知就做顯示通知
-                if (Notification.permission === 'granted') {
-                    ShowNotification(payload.data.title, payload.data.body);
-                    //三秒後自動關閉
-                    setTimeout(notification.close.bind(notification), 3000);
-                }
-            });
-
-
-        });
-
-
-
-        function RegistUserTokenToSelfServer(user_token, successFunc, errorFunc) {
-            var $res = '';
-            $.ajax({
-                type: "POST",
-                url: "receive_user_token.aspx",
-                contentType: 'application/x-www-form-urlencoded',
-                async: true,
-                cache: false,
-                dataType: 'text',
-                data: { user_token: user_token },
-                success: function (data) {
-                    console.log(data );
-                    if (data.hasOwnProperty("d")) {
-                        $res = data.d;
-                        if (successFunc != null)
-                            successFunc(data.d);
-                        }
-                        else {
-                            $res = data;
-                            if (successFunc != null)
-                                successFunc(data);
-                        }
-                },
-                error: function (e) {
-                    if (errorFunc != null)
-                        errorFunc(e);
-                }
-
-
-            });
-            return $res;
-        }
-
-
-        $('#btnStarGetTokenAndReceivePush').click(function () {
-
-            messaging.getToken()
-                .then(function (currentToken) {
-                    $('#log').append("TOKEN: " + currentToken + "<br><br>")
-                    if (currentToken) {
-                        console.log(currentToken);
-
-                        RegistUserTokenToSelfServer(currentToken, function (result) {
-                            $('#log').prepend("送回給自己 Server 的結果 :" + result + "<br><br>")
-                        });
-                    } else {
-                        $('#log').prepend('註冊失敗請檢查相關設定.');
-                    }
-                })
-                .catch(function (err) {
-
-                    $('#log').prepend("跟 Server 註冊失敗 原因:" + err + "<br>");
-                });
-
-        });
-
-
-    </script>
-
+  <script src="https://code.getmdl.io/1.2.1/material.min.js"></script>
 </body>
 </html>
